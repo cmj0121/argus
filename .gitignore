@@ -1,1 +1,6 @@
 *.sw[po]
+
+
+# Added by cargo
+
+/target
