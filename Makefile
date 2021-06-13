@@ -4,10 +4,10 @@ SUBDIR=
 
 all: $(SUBDIR) 	# build all sub-project
 	@cargo check
+	@cargo fmt
 	@cargo test
 	@cargo update
 	@cargo bench
-	@cargo fmt
 	cargo build --release
 
 clean:		# clean-up environment
