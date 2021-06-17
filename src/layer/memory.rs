@@ -1,20 +1,6 @@
 //! The in-memory layer that support quick but non-persistence I/O
-use crate::layer::{Error, Layer};
+use crate::layer::{Error, Layer, Value};
 use std::collections::HashMap;
-
-struct Value {
-    pub(super) value: Vec<u8>,
-    pub(super) deleted: bool,
-}
-
-impl Value {
-    fn new(value: &Vec<u8>) -> Self {
-        Self {
-            value: value.to_vec(),
-            deleted: false,
-        }
-    }
-}
 
 /// The in-memory layer which store the key-value pair in memory via HashMap
 pub struct MemoryLayer {
@@ -53,12 +39,9 @@ impl Layer for MemoryLayer {
     }
 
     /// Get the element from the memory-layer with specified key.
-    fn get(&self, key: &Vec<u8>) -> Result<Option<Vec<u8>>, Error> {
+    fn get(&self, key: &Vec<u8>) -> Result<Option<Value>, Error> {
         match self.mem.get(key) {
-            Some(v) => match v.deleted {
-                true => Ok(None),
-                false => Ok(Some(v.value.to_vec())),
-            },
+            Some(v) => Ok(Some(v.clone())),
             _ => Ok(None),
         }
     }

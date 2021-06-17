@@ -41,7 +41,7 @@ mod tests {
 
         get_status = layer.get(&key);
         assert!(get_status.is_ok());
-        assert!(get_status.unwrap().is_none());
+        assert!(get_status.unwrap().is_some());
         assert_eq!(layer.count(), 0);
     }
 

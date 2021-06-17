@@ -13,6 +13,25 @@ impl Error {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct Value {
+    pub(super) value: Vec<u8>,
+    pub(super) deleted: bool,
+}
+
+impl Value {
+    fn new(value: &Vec<u8>) -> Self {
+        Self {
+            value: value.to_vec(),
+            deleted: false,
+        }
+    }
+
+    pub fn is_deleted(&self) -> bool {
+        self.deleted
+    }
+}
+
 /// The layer define several method used in the LSM-tree which can used in
 /// difference scenraio, like in-memory or persistence storage.
 pub trait Layer {
@@ -41,7 +60,7 @@ pub trait Layer {
     fn set(&mut self, key: &Vec<u8>, value: &Vec<u8>) -> Result<(), Error>;
 
     /// Get the value from the LSM-tree layer with specified key.
-    fn get(&self, key: &Vec<u8>) -> Result<Option<Vec<u8>>, Error>;
+    fn get(&self, key: &Vec<u8>) -> Result<Option<Value>, Error>;
 
     /// Delete the record from the LSM-tree with specified key.
     fn del(&mut self, key: &Vec<u8>) -> Result<bool, Error>;
