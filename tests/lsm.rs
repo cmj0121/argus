@@ -2,11 +2,9 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn test_default_lsm() {
+    fn _test_lsm(mut layer: argus::lsm::LSMTree) {
         let key: Vec<u8> = vec![0, 0, 0];
         let value: Vec<u8> = vec![1, 2, 3];
-        let mut layer: argus::lsm::LSMTree = argus::lsm::LSMTree::new();
 
         let mut get_status = layer.get(&key);
         assert!(get_status.is_ok());
@@ -32,6 +30,27 @@ mod tests {
         get_status = layer.get(&key);
         assert!(get_status.is_ok());
         assert!(get_status.unwrap().is_none());
+        assert_eq!(layer.count(), 0);
+    }
+
+    #[test]
+    fn test_default_lsm() {
+        let layer: argus::lsm::LSMTree = argus::lsm::LSMTree::mem();
+        _test_lsm(layer);
+    }
+
+    #[test]
+    fn test_empty_layer_lsm() {
+        let key: Vec<u8> = vec![0, 0, 0];
+        let value: Vec<u8> = vec![1, 2, 3];
+
+        let mut layer: argus::lsm::LSMTree = argus::lsm::LSMTree::new();
+
+        assert!(layer.get(&key).is_ok());
+        assert!(layer.get(&key).unwrap().is_none());
+        assert!(layer.set(&key, &value).is_err());
+        assert!(layer.del(&key).is_ok());
+        assert_eq!(layer.del(&key).unwrap(), false);
         assert_eq!(layer.count(), 0);
     }
 }
