@@ -1,6 +1,10 @@
 //! The in-memory layer that support quick but non-persistence I/O
 use crate::layer::{Error, Layer, Value};
+use itertools::Itertools;
 use std::collections::HashMap;
+
+/// The name of the memory layer
+pub const NAME: &str = "mem";
 
 /// The in-memory layer which store the key-value pair in memory via HashMap
 pub struct MemoryLayer {
@@ -16,20 +20,8 @@ impl Layer for MemoryLayer {
     }
 
     /// Show the layer name: memory
-    fn name(&self) -> String {
-        "memory".to_string()
-    }
-
-    /// Open the new memory-layer by pass the HashMap. Note the URI will not
-    /// used in the memory-layer.
-    fn save(&mut self, _: &str, rows: &HashMap<Vec<u8>, Vec<u8>>) -> Result<(), Error> {
-        self.mem.clear();
-
-        for (key, value) in rows.iter() {
-            self.mem.insert(key.to_vec(), Value::new(value));
-        }
-
-        Ok(())
+    fn name(&self) -> &'static str {
+        NAME
     }
 
     /// Insert the key-value pair into the memory-layer.
@@ -60,9 +52,14 @@ impl Layer for MemoryLayer {
         }
     }
 
+    fn erase_all(&mut self) -> Result<(), Error> {
+        self.mem.clear();
+        Ok(())
+    }
+
     /// Count the element in the HashMap.
-    fn count(&self) -> usize {
-        let mut count: usize = 0;
+    fn count(&self) -> u64 {
+        let mut count: u64 = 0;
 
         for (_, value) in self.mem.iter() {
             if !value.deleted {
@@ -71,6 +68,23 @@ impl Layer for MemoryLayer {
         }
 
         count
+    }
+
+    /// Get the all valid keys by the descending order.
+    fn keys(&self) -> Box<dyn Iterator<Item = Vec<u8>>> {
+        Box::new(
+            self.mem
+                .iter()
+                .filter(|row| !row.1.deleted)
+                .map(|row| row.0)
+                .cloned()
+                .sorted_by(|x, y| y.cmp(x)),
+        )
+    }
+
+    /// Get the ordered keys by the descending order, event the record mark-as-deletd.
+    fn all_keys(&self) -> Box<dyn Iterator<Item = Vec<u8>>> {
+        Box::new(self.mem.keys().cloned().sorted_by(|x, y| y.cmp(x)))
     }
 }
 

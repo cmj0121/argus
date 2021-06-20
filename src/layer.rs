@@ -1,6 +1,6 @@
 // Copyright 2021 cmj <cmj@cmj.tw>. All right reserved.
 //! The LSM-tree (log-structured merge-tree) implementation.
-use std::collections::HashMap;
+use std::fmt;
 
 #[derive(Debug)]
 pub struct Error {
@@ -13,6 +13,13 @@ impl Error {
     }
 }
 
+/// Show the format `{}` for implemente the fmt::Display trait.
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.msg)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Value {
     pub(super) value: Vec<u8>,
@@ -20,6 +27,7 @@ pub struct Value {
 }
 
 impl Value {
+    /// Create new value by pass the Vec<u8>
     fn new(value: &Vec<u8>) -> Self {
         Self {
             value: value.to_vec(),
@@ -27,6 +35,7 @@ impl Value {
         }
     }
 
+    /// Expose the deletd status for the value
     pub fn is_deleted(&self) -> bool {
         self.deleted
     }
@@ -41,12 +50,7 @@ pub trait Layer {
         Self: Sized;
 
     /// Show the layer's name
-    fn name(&self) -> String;
-
-    /// Create new layer with specified URI and pass the known data.
-    fn save(&mut self, _uri: &str, _rows: &HashMap<Vec<u8>, Vec<u8>>) -> Result<(), Error> {
-        Err(Error::new(format!("[{}] not support save", self.name())))
-    }
+    fn name(&self) -> &'static str;
 
     /// Open the exist layer via the specified URI
     fn open(&self, _uri: &str) -> Result<Self, Error>
@@ -65,8 +69,22 @@ pub trait Layer {
     /// Delete the record from the LSM-tree with specified key.
     fn del(&mut self, key: &Vec<u8>) -> Result<bool, Error>;
 
+    /// erase all data in the current layer.
+    fn erase_all(&mut self) -> Result<(), Error> {
+        Err(Error::new(format!(
+            "[{}] not implemented `erase_all`",
+            self.name()
+        )))
+    }
+
     /// Count the valid element in the layer.
-    fn count(&self) -> usize;
+    fn count(&self) -> u64;
+
+    /// Get the all valid keys by the descending order.
+    fn keys(&self) -> Box<dyn Iterator<Item = Vec<u8>>>;
+
+    /// Get the ordered keys by the descending order, event the record mark-as-deletd.
+    fn all_keys(&self) -> Box<dyn Iterator<Item = Vec<u8>>>;
 }
 
 pub mod memory;
@@ -77,7 +95,7 @@ pub mod memory;
 /// return None.
 pub fn new(name: &str) -> Option<Box<dyn Layer>> {
     match name {
-        "mem" | "memory" => return Some(Box::new(memory::MemoryLayer::new())),
+        memory::NAME => return Some(Box::new(memory::MemoryLayer::new())),
         _ => None,
     }
 }
