@@ -69,10 +69,18 @@ pub trait Layer {
     /// Delete the record from the LSM-tree with specified key.
     fn del(&mut self, key: &Vec<u8>) -> Result<bool, Error>;
 
-    /// erase all data in the current layer.
-    fn erase_all(&mut self) -> Result<(), Error> {
+    /// Erase all data in the current layer.
+    fn erase(&mut self) -> Result<(), Error> {
         Err(Error::new(format!(
             "[{}] not implemented `erase_all`",
+            self.name()
+        )))
+    }
+
+    /// Flush data to another layer.
+    fn flush(&self, _: &Box<dyn Layer>) -> Result<(), Error> {
+        Err(Error::new(format!(
+            "[{}] not implemented `flush`",
             self.name()
         )))
     }
@@ -80,11 +88,14 @@ pub trait Layer {
     /// Count the valid element in the layer.
     fn count(&self) -> u64;
 
-    /// Get the all valid keys by the descending order.
-    fn keys(&self) -> Box<dyn Iterator<Item = Vec<u8>>>;
+    /// Count the total element in the layer, includes mark-as-deleted
+    fn capacity(&self) -> u64;
 
-    /// Get the ordered keys by the descending order, event the record mark-as-deletd.
-    fn all_keys(&self) -> Box<dyn Iterator<Item = Vec<u8>>>;
+    /// Get the all valid keys by the descending order.
+    fn keys(&self, include_deleted: bool) -> Box<dyn Iterator<Item = Vec<u8>>>;
+
+    /// Get the order key-value pair by the descending order, event the record mark-as-deleted.
+    fn pairs(&self) -> Box<dyn Iterator<Item = (&Vec<u8>, &Value)> + '_>;
 }
 
 pub mod memory;
@@ -93,10 +104,10 @@ pub mod memory;
 ///
 /// This function will return the Box<dyn Layer> if name pre-define in layer, or
 /// return None.
-pub fn new(name: &str) -> Option<Box<dyn Layer>> {
+pub fn new(name: &str) -> Result<Box<dyn Layer>, Error> {
     match name {
-        memory::NAME => return Some(Box::new(memory::MemoryLayer::new())),
-        _ => None,
+        memory::NAME => return Ok(Box::new(memory::MemoryLayer::new())),
+        _ => Err(Error::new(format!("cannot create layer: {}", name))),
     }
 }
 

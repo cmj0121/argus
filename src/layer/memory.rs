@@ -52,8 +52,14 @@ impl Layer for MemoryLayer {
         }
     }
 
-    fn erase_all(&mut self) -> Result<(), Error> {
+    /// Erase all data in the current layer.
+    fn erase(&mut self) -> Result<(), Error> {
         self.mem.clear();
+        Ok(())
+    }
+
+    /// Flush data to another layer.
+    fn flush(&self, _: &Box<dyn Layer>) -> Result<(), Error> {
         Ok(())
     }
 
@@ -70,21 +76,25 @@ impl Layer for MemoryLayer {
         count
     }
 
+    /// Count the total element in the layer, includes mark-as-deleted
+    fn capacity(&self) -> u64 {
+        self.mem.len() as u64
+    }
+
     /// Get the all valid keys by the descending order.
-    fn keys(&self) -> Box<dyn Iterator<Item = Vec<u8>>> {
+    fn keys(&self, include_deleted: bool) -> Box<dyn Iterator<Item = Vec<u8>>> {
         Box::new(
             self.mem
                 .iter()
-                .filter(|row| !row.1.deleted)
+                .filter(|row| include_deleted || !row.1.deleted)
                 .map(|row| row.0)
                 .cloned()
                 .sorted_by(|x, y| y.cmp(x)),
         )
     }
 
-    /// Get the ordered keys by the descending order, event the record mark-as-deletd.
-    fn all_keys(&self) -> Box<dyn Iterator<Item = Vec<u8>>> {
-        Box::new(self.mem.keys().cloned().sorted_by(|x, y| y.cmp(x)))
+    fn pairs(&self) -> Box<dyn Iterator<Item = (&Vec<u8>, &Value)> + '_> {
+        Box::new(self.mem.iter().clone().sorted_by(|(x, _), (y, _)| y.cmp(x)))
     }
 }
 

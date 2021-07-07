@@ -18,7 +18,7 @@ mod tests {
         }
 
         inc_count = 0;
-        for _ in layer.keys() {
+        for _ in layer.keys(false) {
             inc_count += 1
         }
         assert_eq!(
@@ -50,7 +50,7 @@ mod tests {
 
         assert_eq!(layer.count(), 0);
         inc_count = 0;
-        for _ in layer.keys() {
+        for _ in layer.keys(false) {
             inc_count += 1
         }
         assert_eq!(
@@ -95,15 +95,30 @@ mod tests {
     #[test]
     fn test_not_exist() {
         let layer = argus::layer::new("not-exist");
-        assert!(layer.is_none());
+        assert!(layer.is_err());
     }
 
     #[test]
-    fn test_memory_layer() {
-        let mut layer = argus::layer::new("mem").unwrap();
+    fn test_layers() {
+        _test_layer(argus::layer::memory::NAME);
+    }
+
+    fn _test_layer(name: &str) {
+        let mut layer = argus::layer::new(name).unwrap();
 
         test_layer_basic(&mut layer);
         test_layer_stress(&mut layer, 128);
+        assert_eq!(
+            layer.keys(true).collect::<Vec<Vec<u8>>>().len(),
+            layer
+                .pairs()
+                .collect::<Vec<(&Vec<u8>, &argus::layer::Value)>>()
+                .len()
+        );
+
+        assert!(layer.erase().is_ok());
+        assert_eq!(layer.count(), 0);
+        assert_eq!(layer.capacity(), 0);
     }
 }
 

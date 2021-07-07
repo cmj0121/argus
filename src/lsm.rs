@@ -30,27 +30,14 @@ impl LSM {
         let mut layer_cfg: Vec<LayerConfig> = vec![];
 
         for (old_layer, old_threshold) in self.config.iter() {
-            match new(&old_layer.name()) {
-                Some(layer) => {
-                    let layer_setting: LayerConfig = (layer, *old_threshold);
-                    layer_cfg.push(layer_setting);
-                }
-                None => {
-                    return Err(Error::new(format!(
-                        "cannot create layer: {}",
-                        old_layer.name()
-                    )))
-                }
-            }
+            let layer = new(&old_layer.name())?;
+            let layer_setting: LayerConfig = (layer, *old_threshold);
+            layer_cfg.push(layer_setting);
         }
 
-        match new(name) {
-            Some(layer) => {
-                let layer_setting: LayerConfig = (layer, threshold);
-                layer_cfg.push(layer_setting);
-            }
-            None => return Err(Error::new(format!("cannot create layer: {}", name))),
-        }
+        let layer = new(name)?;
+        let layer_setting: LayerConfig = (layer, threshold);
+        layer_cfg.push(layer_setting);
 
         Ok(Self { config: layer_cfg })
     }
@@ -109,16 +96,40 @@ impl LSM {
     /// Flush the data to the next layer.
     fn flush(&mut self) -> Result<(), Error> {
         // Check the count of each layer and run flush if need.
-        for index in 0..self.config.len() {
-            let (layer, threshold) = self.config.get_mut(index).unwrap();
-
-            if *threshold == 0 || layer.count() < *threshold {
+        for index in 0..(self.config.len() - 1) {
+            // fetch the current and next layer (mutable)
+            if let [curr, next] = self
+                .config
+                .get_mut(index..(index + 2))
+                .expect("should be get two layers")
+            {
                 // 1. check the threshold.
-                break;
+                let (curr_layer, curr_threshold) = curr;
+                if *curr_threshold == 0 || curr_layer.count() < *curr_threshold {
+                    // need not flush
+                    continue;
+                }
+
+                // 2. flush to next layer.
+                let (next_layer, _) = next;
+                curr_layer.flush(next_layer)?
             }
-            // 2. flush to next layer.
-            // 3. create layer if it is the last layer.
         }
+
+        // 3. create new layer if it is the last layer.
+        match self.config.last_mut() {
+            Some(last) => {
+                let (last_layer, last_threshold) = last;
+
+                if *last_threshold > 0 && last_layer.count() > *last_threshold {
+                    let new_layer = new(last_layer.name())?;
+                    let layer_setting: LayerConfig = (new_layer, *last_threshold);
+                    self.config.push(layer_setting);
+                }
+            }
+            _ => {}
+        }
+
         Ok(())
     }
 }
