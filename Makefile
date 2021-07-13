@@ -1,14 +1,18 @@
-SUBDIR=
+BIN := target/release/argus
 
-.PHONY: all clean help doc $(SUBDIR)
+.PHONY: all clean help doc test
 
-all: $(SUBDIR) 	# build all sub-project
-	@cargo check
-	@cargo fmt
-	@cargo test
-	@cargo update
-	@cargo bench
+all: $(BIN) 	# build all sub-project
+
+$(BIN): $(wildcard src/*.rs)
 	cargo build --release
+
+test:	# run test
+	cargo check
+	cargo fmt
+	cargo test
+	cargo update
+	cargo bench
 
 clean:		# clean-up environment
 	cargo clean
@@ -22,5 +26,6 @@ help:		# show this message
 doc:		# show the document
 	cargo doc --open
 
-$(SUBDIR):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
+INSTALL_PATH := /usr/local/bin 
+install: $(BIN)	# install the argus to INSTALL_PATH
+	install -m755 $< $(INSTALL_PATH)
