@@ -1,8 +1,11 @@
 [package]
 name = "argus"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["cmj <cmj@cmj.tw>"]
 edition = "2018"
+description = "The multi-layer store"
+keywords = ["argus", "store", "multi-layer"]
+repository = "https://github.com/cmj0121/argus"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

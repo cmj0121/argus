@@ -1,15 +1,17 @@
-BIN := target/release/argus
+.PHONY: all clean help doc test check
 
-.PHONY: all clean help doc test
+BIN := target/release/argus
 
 all: $(BIN) 	# build all sub-project
 
-$(BIN): $(wildcard src/*.rs)
+$(BIN): $(wildcard src/*.rs) linter
 	cargo build --release
 
-test:	# run test
+linter:	# run static analysis lint
 	cargo check
 	cargo fmt
+
+test:	# run test
 	cargo test
 	cargo update
 	cargo bench
