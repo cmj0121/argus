@@ -1,0 +1,7 @@
+WHITESPACE = _{ " " }
+
+command = ${ SOI ~ WHITESPACE* ~ operate ~ resource? ~ WHITESPACE* ~ EOI }
+
+operate  = @{ "GET" | "SET" | "DEL" }
+resource = ${ WHITESPACE ~ "*" }
+
