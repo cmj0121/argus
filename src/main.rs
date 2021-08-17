@@ -1,6 +1,4 @@
 // Copyright 2021 cmj <cmj@cmj.tw>. All right reserved.
-use argus::Command;
-use log::error;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -22,9 +20,6 @@ struct CLI {
         help = "Verbose mode"
     )]
     verbose: usize,
-
-    #[structopt(help = "command")]
-    command: String,
 }
 
 fn main() {
@@ -36,11 +31,6 @@ fn main() {
         .verbosity(args.verbose)
         .init()
         .unwrap();
-
-    match Command::from_str(&args.command) {
-        Err(err) => error!("{}", err),
-        Ok(_) => {}
-    }
 }
 
 // vim: set tabstop=4 sw=4 expandtab:
