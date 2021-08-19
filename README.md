@@ -5,9 +5,9 @@ The argus is the multi-layer data store. It is based on the [log-structured merg
 with 128-bit [ULID][1] like primary key and support few data types.
 
 ## Interface ##
-The argus provides two access interfaces: command-line and web API. The command-line interface
-provides simple [REPL (read-eval-print loop)][2] with few grammar support, and the web API is based
-on the [RESTFul][3].
+The argus provides one general interface to access the store: the web API is based on the [RESTFul][2].
+The 
+
 
 
 ## Data Types ##
@@ -34,6 +34,5 @@ string. The object is used to store large file and the key is the hashed value w
 
 [0]: https://en.wikipedia.org/wiki/Log-structured_merge-tree
 [1]: https://github.com/ulid/spec
-[2]: https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop
-[3]: https://en.wikipedia.org/wiki/Representational_state_transfer
+[2]: https://en.wikipedia.org/wiki/Representational_state_transfer
 

@@ -3,6 +3,7 @@
 BIN := target/release/argus
 
 all: $(BIN) 	# build all sub-project
+	@pre-commit install --install-hooks
 
 $(BIN): $(wildcard src/*.rs) linter
 	cargo build --release
@@ -18,6 +19,7 @@ test:	# run test
 
 clean:		# clean-up environment
 	cargo clean
+	find . -name '*.swp' -delete
 
 help:		# show this message
 	@printf "Usage: make [OPTION]\n"
@@ -28,6 +30,6 @@ help:		# show this message
 doc:		# show the document
 	cargo doc --open
 
-INSTALL_PATH := /usr/local/bin 
+INSTALL_PATH := /usr/local/bin
 install: $(BIN)	# install the argus to INSTALL_PATH
 	install -m755 $< $(INSTALL_PATH)
